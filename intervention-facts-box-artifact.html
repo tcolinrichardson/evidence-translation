@@ -1142,11 +1142,7 @@
     if(dm.ok){
       ctx.fillStyle=fg2; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.font='600 10.5px '+mono;
       ctx.fillText((MEASURES[est.measure].label+' · sampling distribution with 95% CI').toUpperCase(), 24, y+22);
-      await new Promise((resolve,reject)=>{
-        const svgStr='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" font-family="'+mono+'">'+svgFontStyle()+dm.svg+'</svg>';
-        const img=new Image(); img.onload=()=>{ ctx.drawImage(img,24,y+34,plotW,plotH); resolve(); }; img.onerror=reject;
-        img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
-      });
+      await drawSvgInto(ctx, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" width="720" height="300" font-family="'+mono+'">'+svgFontStyle()+dm.svg+'</svg>', 24, y+34, plotW, plotH);
       y+=chartH;
     }
     // icon array (waffle of 100 + legend), when toggled on — matches the on-screen aid
@@ -1262,6 +1258,20 @@
     }
     _svgFontStyle = css ? '<style>'+css+'</style>' : '';
     return _svgFontStyle;
+  }
+  // Rasterize an SVG string into ctx at (dx,dy,dw,dh). On a parse failure, draw a visible
+  // "chart unavailable" placeholder instead of leaving the figure blank with only a console error,
+  // and still resolve so the rest of the figure renders.
+  function drawSvgInto(ctx, svgStr, dx, dy, dw, dh){
+    return new Promise(res=>{
+      const img=new Image();
+      img.onload=()=>{ try{ ctx.drawImage(img, dx, dy, dw, dh); }catch(e){} res(); };
+      img.onerror=()=>{ ctx.save(); ctx.fillStyle='#f1f2f5'; ctx.fillRect(dx,dy,dw,dh);
+        ctx.fillStyle='rgba(32,37,58,0.55)'; ctx.font="500 13px 'JetBrains Mono',ui-monospace,monospace";
+        ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('chart unavailable', dx+dw/2, dy+dh/2);
+        ctx.restore(); res(); };
+      img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
+    });
   }
   // Brand mark (EvAc reversed icon: a white square frame with the magenta slash, transparent
   // interior). Derived once from the brand Icon art (navy frame recoloured white, white
@@ -1382,7 +1392,7 @@
     if(chartSVG){
       ctx.fillStyle=fg2; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.font='600 10.5px '+mono;
       ctx.fillText((chartLabel||'').toUpperCase(),24,y+22);
-      await new Promise((res,rej)=>{const s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 '+CH+'" width="720" height="'+CH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>';const img=new Image();img.onload=()=>{ctx.drawImage(img,24,y+34,plotW,plotH);res();};img.onerror=rej;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);});
+      await drawSvgInto(ctx, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 '+CH+'" width="720" height="'+CH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>', 24, y+34, plotW, plotH);
       y+=chartH;
     }
     if(legItems){
@@ -1510,7 +1520,7 @@
     ctx.fillStyle='#fff'; ctx.fillRect(chartX, bodyY, chartBoxW, bodyContentH);
     if(chartSVG){
       const sy2=bodyY+Math.round((bodyContentH-svgH)/2);
-      await new Promise((res,rej)=>{const s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 '+CH+'" width="720" height="'+CH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>';const img=new Image();img.onload=()=>{ctx.drawImage(img,chartX+cPad,sy2,svgW,svgH);res();};img.onerror=rej;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);});
+      await drawSvgInto(ctx, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 '+CH+'" width="720" height="'+CH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>', chartX+cPad, sy2, svgW, svgH);
     }
     ctx.strokeStyle=border; ctx.lineWidth=1; ctx.strokeRect(chartX+0.5, bodyY+0.5, chartBoxW-1, bodyContentH-1);
 
@@ -1551,11 +1561,7 @@
     ctx.fillText(title||'', markR+14, headerH/2+1);
     // Plot SVG (bars + annotations), rasterized and scaled into the content area
     if(chartSVG){
-      await new Promise((res,rej)=>{
-        const s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+SVGW+' '+SVGH+'" width="'+SVGW+'" height="'+SVGH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>';
-        const img=new Image(); img.onload=()=>{ ctx.drawImage(img, PAD, headerH+PAD, svgW, svgH); res(); }; img.onerror=rej;
-        img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
-      });
+      await drawSvgInto(ctx, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+SVGW+' '+SVGH+'" width="'+SVGW+'" height="'+SVGH+'" font-family="'+mono+'">'+svgFontStyle()+chartSVG+'</svg>', PAD, headerH+PAD, svgW, svgH);
     }
     ctx.strokeStyle=border; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,W-1,H-1);
     return {canvas,W,H};
