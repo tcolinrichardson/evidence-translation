@@ -418,6 +418,8 @@
   // Normal density (for the effect-size distribution curve)
   const npdf=(x,mu,sd)=>Math.exp(-0.5*Math.pow((x-mu)/sd,2))/(sd*Math.sqrt(2*Math.PI));
   const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // escape &<> but preserve <b>/</b> emphasis tags (for user-editable titles that support bold)
+  const escB=s=>String(s).split(/(<\/?b>)/i).map(t=>/^<\/?b>$/i.test(t)?t.toLowerCase():esc(t)).join('');
 
   // ================================ Tool registry ================================
   // Each tool is a self-contained module that owns its state and renders into its
@@ -2078,7 +2080,7 @@
     function reportCfg(){
       const c=state.cumulative, cumulative=(c && isFinite(+c.lowOut) && isFinite(+c.highOut))
         ? {label:c.label, base:c.base, lowOut:+c.lowOut, highOut:+c.highOut} : null;
-      return {kind:'tornado', eyebrow:state.eyebrow, title:state.title, base:state.base, ax:state.ax, unit:state.unit, params:valid(), cumulative, slug:id};
+      return {kind:'tornado', eyebrow:state.eyebrow, title:escB(state.title), base:state.base, ax:state.ax, unit:state.unit, params:valid(), cumulative, slug:id};
     }
     function redraw(){ previewReport(q('preview'), reportCfg()); q('rCodeOut').textContent=rCode(); }
     function renderRows(){
