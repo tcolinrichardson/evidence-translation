@@ -1798,14 +1798,24 @@
     if(n){
       const pct=S[n-1].value/pool*100;
       const pctStr=(Math.abs(pct-Math.round(pct))<0.05?pct.toFixed(0):pct.toFixed(1))+'%';
-      const boxX=plotX0+plotW*0.50, boxW=plotR-boxX, tX=boxX+18;
-      const cLines=narrativeLines('of the Target Population Reached', mc, 15, sans, boxW-24).slice(0,2);
-      // text block, low in the empty lower-right; the magenta rule wraps the block exactly so the text is centered with the bar
-      const numBase=plotTop+8.2*rowPitch, subBase=numBase+24, lastSub=subBase+(cLines.length-1)*21;
-      const ruleTop=numBase-34, ruleBot=lastSub+5, boxTop=ruleTop-6, boxH=(ruleBot-ruleTop)+12;
-      ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fillRect(boxX, boxTop, boxW, boxH);
+      // Bottom-align the block to the plot's lower-right so it scales with the step count instead of a
+      // fixed row offset (previously drifted off-canvas / over the top bars when n ≠ ~9). Shift it right
+      // to clear the tallest bar in its band when there's room; clamp so the caption always fits on-canvas
+      // (never clipped at the right edge) — when bars are unavoidably long it sits as an opaque annotation.
+      const CALLW=214;                                   // reserved block width (fits the 2-line caption)
+      const cLines=narrativeLines('of the Target Population Reached', mc, 15, sans, CALLW-24).slice(0,2);
+      let ruleBot=plotBottom-6, lastSub=ruleBot-5, subBase=lastSub-(cLines.length-1)*21;
+      let numBase=subBase-24, ruleTop=numBase-34;
+      if(ruleTop<plotTop+2){ const dy=(plotTop+2)-ruleTop; ruleTop+=dy; numBase+=dy; subBase+=dy; ruleBot+=dy; }
+      let maxBarR=plotX0;
+      for(let i=0;i<n;i++){ const rc=plotTop+i*rowPitch+rowPitch/2; if(rc>=ruleTop-4 && rc<=ruleBot+4) maxBarR=Math.max(maxBarR, xOf(S[i].value)); }
+      const boxX=Math.min(Math.max(plotX0+plotW*0.50, maxBarR+14), plotR-CALLW), boxW=plotR-boxX, tX=boxX+18;
+      const boxTop=ruleTop-6, boxH=(ruleBot-ruleTop)+12;
+      ctx.fillStyle='rgba(255,255,255,0.94)'; ctx.fillRect(boxX, boxTop, boxW, boxH);
       ctx.fillStyle=mag; ctx.fillRect(boxX, ruleTop, 4, ruleBot-ruleTop);
-      ctx.fillStyle=mag; ctx.font='700 46px '+mono; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      let nf=46; ctx.font='700 '+nf+'px '+mono; mc.font='700 '+nf+'px '+mono;
+      while(nf>26 && mc.measureText(pctStr).width>boxW-24){ nf-=1; ctx.font='700 '+nf+'px '+mono; mc.font='700 '+nf+'px '+mono; }
+      ctx.fillStyle=mag; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
       ctx.fillText(pctStr, tX, numBase);
       drawNarrative(ctx, cLines, tX, subBase, 15, sans, ink);
     }
