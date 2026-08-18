@@ -34,24 +34,8 @@
   th,td{text-align:left;padding:6px 8px;vertical-align:middle;}
   thead th{font-size:17.5px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);line-height:1.25;}
   thead th .uline{font-weight:400;font-size:10px;color:var(--muted);}
-  #benefitTable{table-layout:fixed;}
-  thead th.gcell,tbody td.gcell{text-align:center;}
-  tbody td.gcell{font-variant-numeric:tabular-nums;font-weight:600;}
-  .gstart{border-left:2px solid var(--line);}
   .op{color:var(--muted);font-weight:400;}
-  .eq{display:flex;align-items:flex-end;justify-content:center;gap:6px;white-space:nowrap;margin-top:2px;}
-  .term{display:inline-flex;flex-direction:column;align-items:center;line-height:1.15;}
-  .tlabel{font-size:9.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
-  .g-rrr{width:33%;} .g-mid{width:34%;} .g-nnt{width:33%;}
   tbody tr + tr td{border-top:1px solid var(--grid);}
-  .colder{color:var(--derived);}
-  .ci{display:block;font-weight:400;font-size:10.5px;color:var(--ci);font-variant-numeric:tabular-nums;margin-top:1px;}
-  .big{font-size:20px;}
-  .mini{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end;}
-  .mini-bar{position:relative;width:84px;height:12px;background:var(--barbg);border-radius:3px;overflow:hidden;}
-  .mini-fill{position:absolute;top:0;left:0;height:100%;border-radius:3px;}
-  .fill-no{background:var(--barno);} .fill-drug{background:var(--bardrug);}
-  .flag{color:var(--harm);font-weight:600;}
 
   .controls{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;
     border-top:1px solid var(--grid);padding:14px 20px;background:#fcfbf8;}
@@ -86,52 +70,17 @@
   .tooltab:hover{color:var(--fg1);border-color:var(--fg3);}
   .tooltab.is-active{background:var(--ea-ink);color:#fff;border-color:var(--ea-ink);}
   .tool{display:block;}
-  /* placeholder card for not-yet-built tools */
-  .placeholder{padding:48px 24px;text-align:center;color:var(--fg2);}
-  .placeholder-badge{display:inline-block;font-family:var(--font-heading);font-size:11px;font-weight:700;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--ea-magenta);border:1px solid var(--ea-magenta);
-    border-radius:999px;padding:5px 14px;margin-bottom:16px;}
-  .placeholder p{max-width:420px;margin:0 auto;font-family:var(--font-body);font-size:14.5px;line-height:1.55;}
-
-  /* ---- icon array (waffle): per-100 outcome breakdown for the effect tool ---- */
-  .iconarray{padding:14px 20px 2px;border-top:1px solid var(--grid);}
-  /* When shown as a standalone on-screen aid (Effect tool), frame it like a card. */
-  .iconarray--aside{border:1px solid var(--border);border-top:1px solid var(--border);margin-top:14px;padding-bottom:14px;}
-  .iconarray__label{font-family:var(--font-heading);font-size:12px;font-weight:500;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--fg2);margin-bottom:12px;}
-  .iconarray__grid{display:grid;grid-template-columns:repeat(25,1fr);gap:4px;}
-  .iconarray__cell{aspect-ratio:1/1;border-radius:2px;background:#d9dbe4;}
-  .iconarray .is-prevented{background:var(--ea-magenta);}
-  .iconarray .is-develop{background:var(--ea-ink);}
-  .iconarray .is-well{background:#d9dbe4;}
-  .iconarray__legend{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:16px;
-    font-family:var(--font-body);font-size:15px;color:var(--fg1);}
-  .iconarray__legend .lg{display:flex;align-items:center;gap:9px;}
-  .iconarray__legend .sw{width:17px;height:17px;border-radius:3px;flex:none;}
-  .iconarray__legend b{font-weight:700;font-variant-numeric:tabular-nums;}
 
   /* ============ Evidence Action effect-size card (design reference) ============ */
   .card{background:#fff;border:1px solid var(--border);color:var(--fg1);}
   /* Figure card: the on-screen preview is the exported PNG itself, so the card holds no chrome. */
   .figcard{border:0;background:none;padding:0;}
   .figimg{display:block;width:720px;max-width:100%;height:auto;}
-  .card .metric-num{font-family:var(--font-heading);line-height:1;letter-spacing:-0.02em;}
   /* header */
   .card__header{background:var(--ea-ink);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
   .slash{display:inline-block;width:10px;height:22px;background:var(--ea-magenta);transform:skewX(-18deg);flex:none;}
   .card__title{font-family:var(--font-heading);font-size:17px;font-weight:700;}
   .card__eyebrow-right{margin-left:auto;font-family:var(--font-heading);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.55);}
-  /* metric grid */
-  .metrics{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);}
-  .metric{padding:20px 24px;}
-  .metric + .metric{border-left:1px solid var(--border);}
-  .metric__label{font-family:var(--font-heading);font-size:10px;letter-spacing:.1em;color:var(--fg2);text-transform:uppercase;}
-  .metric__label--tight{font-size:8.5px;letter-spacing:.03em;white-space:nowrap;}
-  .metric__value{font-size:38px;font-weight:700;margin-top:8px;color:var(--fg1);}
-  .metric__value--accent{color:var(--ea-magenta);}
-  .metric__unit{font-size:16px;font-weight:400;color:var(--fg2);}
-  .metric__ci{font-family:var(--font-body);font-size:12px;color:var(--fg3);margin-top:6px;}
-  .metric__ci .flag{color:var(--ea-magenta);font-weight:700;}
   /* chart */
   .chart{padding:22px 24px 16px;}
   .chart__label{font-family:var(--font-heading);font-size:10px;letter-spacing:.1em;color:var(--fg2);text-transform:uppercase;margin-bottom:8px;}
@@ -216,12 +165,6 @@
   .sc-addcrit{margin-top:4px;}
   /* Desktop-only figure factory: layout is fixed-width, no responsive reflow. */
 
-  /* effect-size distribution curve (ported from effect-reporting-tool) */
-  .distwrap{padding:2px 20px 16px;border-top:1px solid var(--grid);}
-  .disth{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:14px 0 8px;}
-  #rrDist{width:100%;height:auto;display:block;}
-  #rrDist text{font-family:var(--font-heading);font-variant-numeric:tabular-nums;}
-  .distcap{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.45;}
   .axis-toggle{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 0;}
   .axis-lbl{font-size:12px;color:var(--muted);}
 
@@ -251,7 +194,6 @@
   .etable tr.dragging{opacity:.45;}
   .etable tr.drop-before td{box-shadow:inset 0 2px 0 0 var(--ea-magenta);}
   .etable tr.drop-after td{box-shadow:inset 0 -2px 0 0 var(--ea-magenta);}
-  .metric__value{overflow-wrap:anywhere;}
   /* SE/CI toggle + report button */
   .modewrap{margin-bottom:10px;}
   .mode-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:8px;}
@@ -493,116 +435,6 @@
             rr:{rr,lo:rrLo,hi:rrHi}, rrr,rrrLo,rrrHi, arr,arrLo,arrHi};
   }
 
-  // NNT point estimate with a CI shown below (matching the other cells); Altman-style
-  // discontinuity handling when the reduction's CI crosses zero. lo/hi = CI on the reduction.
-  function nntString(arr, lo, hi){
-    const ptStr = arr!==0 ? Math.round(Math.abs(1/arr)).toLocaleString() : '\u221e';
-    const big = `<span class="big">${ptStr}</span>`;
-    if(!state.showCI) return big;
-    let ci;
-    if(lo>0){ // clearly beneficial
-      ci = `${Math.round(1/hi).toLocaleString()} to ${Math.round(1/lo).toLocaleString()}`;
-    } else if(hi<0){ // clearly harmful
-      ci = `${Math.round(1/Math.abs(hi)).toLocaleString()} to ${Math.round(1/Math.abs(lo)).toLocaleString()}`;
-    } else { // CI crosses zero -> discontinuous
-      const benBound = hi>0 ? Math.round(1/hi).toLocaleString() : '\u221e';
-      const harmBound = lo<0 ? Math.round(1/Math.abs(lo)).toLocaleString() : '\u221e';
-      ci = `<span class="flag">NNTB ${benBound} to \u221e to NNTH ${harmBound}</span>`;
-    }
-    return `${big}<span class="ci">CI: ${ci}</span>`;
-  }
-
-  // merged "Control → Treatment = ARR" cell, with the ARR (Newcombe) CI below
-  function arrEqCell(m){
-    const result=`<span class="big">${pct(m.arr).replace('%',' percentage points')}</span>`;
-    const eq=`<span class="eq">`+
-      `<span class="term"><span class="tlabel">Control</span>${pct(m.pSQ)}</span>`+
-      `<span class="op">→</span>`+
-      `<span class="term"><span class="tlabel">Treatment</span>${pct(m.pPR)}</span>`+
-    `</span>`;
-    const ci=state.showCI ? `<span class="ci">CI: ${pct(m.arrLo).replace('%','pp')} to ${pct(m.arrHi).replace('%','pp')}</span>` : '';
-    return `${result}${eq}${ci}`;
-  }
-  function rrrCell(m){
-    if(!isFinite(m.rrr)) return '\u2014';
-    const v=Math.round(m.rrr*100)+'%';
-    const ci=state.showCI ? `<span class="ci">CI: ${Math.round(m.rrrLo*100)}% to ${Math.round(m.rrrHi*100)}%</span>` : '';
-    return `<span class="big">${v}</span>${ci}`;
-  }
-
-  // NNT 95% CI text with Altman-style discontinuity handling (CI crosses zero).
-  function nntCI(m){
-    const lo=m.arrLo, hi=m.arrHi;
-    if(lo>0) return '95% CI '+Math.round(1/hi).toLocaleString()+' – '+Math.round(1/lo).toLocaleString();
-    if(hi<0) return '95% CI '+Math.round(1/Math.abs(hi)).toLocaleString()+' – '+Math.round(1/Math.abs(lo)).toLocaleString();
-    const ben=hi>0?Math.round(1/hi).toLocaleString():'∞', harm=lo<0?Math.round(1/Math.abs(lo)).toLocaleString():'∞';
-    return '<span class="flag">NNTB '+ben+' – ∞ – NNTH '+harm+'</span>';
-  }
-
-  // Build the Evidence Action metric grid. Honors the show/hide toggles and sets
-  // the grid column count to the number of visible metrics. Ratio measures show
-  // RRR / ARR / NNT; mean difference shows MD (+ relative change).
-  function buildMetrics(m){
-    const cells=[], W=[];  // W = per-column grid weights (ARR needs more width for its CI line)
-    if(m.measure==='md'){
-      const u = m.unit ? ' '+esc(m.unit) : '';
-      const mdCI = state.showCI ? '95% CI '+fmtNum(m.mdLo)+' – '+fmtNum(m.mdHi)+u : '';
-      cells.push('<div class="metric"><div class="metric__label">Mean difference</div>'
-        +'<div class="metric-num metric__value metric__value--accent">'+fmtNum(m.md)+(u?'<span class="metric__unit">'+u+'</span>':'')+'</div>'
-        +'<div class="metric__ci">'+(mdCI||'&nbsp;')+'</div></div>');
-      if(m.rel){
-        const relCI = state.showCI ? '95% CI '+fmtNum(m.rel.lo)+' – '+fmtNum(m.rel.hi)+'%' : '';
-        cells.push('<div class="metric"><div class="metric__label">Relative change</div>'
-          +'<div class="metric-num metric__value">'+fmtNum(m.rel.v)+'<span class="metric__unit">&nbsp;%</span></div>'
-          +'<div class="metric__ci">'+(relCI||'&nbsp;')+'</div></div>');
-      }
-      const elm=document.getElementById('benefitTable');
-      if(elm) elm.style.gridTemplateColumns='repeat('+(cells.length||1)+',1fr)';
-      return cells.join('');
-    }
-    if(state.showRRR){
-      const val = isFinite(m.rrr) ? Math.round(m.rrr*100)+'%' : '—';
-      const ci  = (state.showCI && isFinite(m.rrr)) ? '95% CI&nbsp;&nbsp;'+Math.round(m.rrrLo*100)+' – '+Math.round(m.rrrHi*100)+'%' : '';
-      cells.push('<div class="metric"><div class="metric__label">Relative reduction</div>'
-        +'<div class="metric-num metric__value metric__value--accent">'+val+'</div>'
-        +'<div class="metric__ci">'+(ci||'&nbsp;')+'</div></div>'); W.push('1fr');
-    }
-    if(state.showARR){
-      const val = pct(m.arr).replace('%','')+'<span class="metric__unit">&nbsp;pp</span>';
-      let ci = pct(m.pSQ)+' → '+pct(m.pPR);
-      if(state.showCI) ci += '&nbsp;·&nbsp;95% CI '+pct(m.arrLo).replace('%','')+' – '+pct(m.arrHi).replace('%','')+'pp';
-      cells.push('<div class="metric"><div class="metric__label">Absolute reduction</div>'
-        +'<div class="metric-num metric__value">'+val+'</div>'
-        +'<div class="metric__ci" style="white-space:nowrap">'+ci+'</div></div>'); W.push('auto');
-    }
-    if(state.showNN){
-      const nntStr = m.arr!==0 ? Math.round(Math.abs(1/m.arr)).toLocaleString() : '∞';
-      const ci = state.showCI ? nntCI(m) : '';
-      cells.push('<div class="metric"><div class="metric__label metric__label--tight">Number needed to treat</div>'
-        +'<div class="metric-num metric__value">'+nntStr+'</div>'
-        +'<div class="metric__ci">'+(ci||'&nbsp;')+'</div></div>'); W.push('1fr');
-    }
-    const el=document.getElementById('benefitTable');
-    if(el) el.style.gridTemplateColumns = W.length ? W.join(' ') : 'repeat('+(cells.length||1)+',1fr)';
-    return cells.join('');
-  }
-
-  function tableCols(m){
-    // three visual groups, each ~1/3 width: [RRR] | [Control/Treatment/ARR] | [NNT].
-    // gstart draws the divider before a group, but only when an earlier group is present.
-    let head=`<tr>`, prev=false;
-    if(state.showRRR){ head+=`<th class="gcell colder g-rrr">Relative Reduction (RRR)</th>`; prev=true; }
-    if(state.showARR){ head+=`<th class="gcell colder g-mid${prev?' gstart':''}">Absolute Reduction (ARR)</th>`; prev=true; }
-    if(state.showNN){ head+=`<th class="gcell colder g-nnt${prev?' gstart':''}">Number Needed to Treat (NNT)</th>`; }
-    head+=`</tr>`;
-    let body=`<tr>`, bprev=false;
-    if(state.showRRR){ body+=`<td class="gcell colder">${rrrCell(m)}</td>`; bprev=true; }
-    if(state.showARR){ body+=`<td class="gcell colder${bprev?' gstart':''}">${arrEqCell(m)}</td>`; bprev=true; }
-    if(state.showNN){ body+=`<td class="gcell colder${bprev?' gstart':''}">${nntString(m.arr,m.arrLo,m.arrHi)}</td>`; }
-    body+=`</tr>`;
-    return `<thead>${head}</thead><tbody>${body}</tbody>`;
-  }
-
   // Effect-size distribution: a log-normal RR bell whose spread is backed out of
   // the box's MN 95% CI (so its 2.5/97.5% points line up with the shown interval).
   // Ported/adapted from effect-reporting-tool's drawPlot (RR axis, no MID/prior).
@@ -685,16 +517,6 @@
       svg+='<text x="'+(xMid+(nearNo?(midLeft?-7:7):0)).toFixed(1)+'" y="'+(M.top-8)+'" font-size="12" font-weight="600" fill="#20253a" text-anchor="'+(nearNo?(midLeft?'end':'start'):'middle')+'">MID '+fmtV(est.mid)+'</text>';
     }
     return {ok:true, svg};
-  }
-
-  function drawDist(m){
-    const sec=document.getElementById('distSection');
-    if(!state.showDist){ sec.style.display='none'; return; }
-    sec.style.display='';
-    const svgEl=document.getElementById('rrDist');
-    const r=distMarkup(m);
-    svgEl.innerHTML = r.ok ? r.svg
-      : '<text x="360" y="150" font-size="14" fill="#8a8378" text-anchor="middle">Distribution unavailable for this estimate.</text>';
   }
 
   // Measure-specific narrative sentence(s), returned as HTML.
@@ -877,16 +699,6 @@
     for(let k=0; used<100 && k<order.length; k++){ fl[order[k].i]++; used++; }
     return fl;
   }
-  function drawIcons(m){
-    const box=document.getElementById('iconArray'); if(!box) return;
-    if(!state.showIcons || !isRatio() || m.pSQ==null){ box.style.display='none'; return; }
-    box.style.display='';
-    const g=iconGroups(m), counts=alloc100(g.fill), cells=[];
-    g.fill.forEach((it,i)=>{ for(let j=0;j<counts[i];j++) cells.push(it.cls); });
-    document.getElementById('iconGrid').innerHTML=cells.map(c=>'<span class="iconarray__cell '+c+'"></span>').join('');
-    document.getElementById('iconLegend').innerHTML=g.legend.map(l=>
-      '<span class="lg"><span class="sw '+l.cls+'"></span><span class="lgtxt"><b>'+fmt1(l.v)+'</b> '+esc(l.txt)+'</span></span>').join('');
-  }
 
   function draw(){
     const m=derive();
@@ -1002,8 +814,6 @@
   // ---- PNG report: everything above "Show / hide", composited on a canvas ----
   // CSP-safe — plain SVG rasterized via a data: URL taints nothing (cf.
   // effect-reporting-tool/js/export.js). Respects the show/hide toggles.
-  // Effect-tool download path — delegates to the shared, iframe-safe saver (see dlBlob).
-  function downloadBlob(filename, blob){ dlBlob(filename, blob); }
   function reportCols(m){
     const out=[];
     if(m.measure==='md'){
@@ -1078,7 +888,7 @@
     if(showIcons){
       const g=iconGroups(m), counts=alloc100(g.fill), cells=[];
       g.fill.forEach((it,i)=>{ for(let j=0;j<counts[i];j++) cells.push(it.cls); });
-      // value (bold count) + label kept separate so the count draws bold, mirroring drawIcons' <b>
+      // value (bold count) + label kept separate so the count draws bold
       const legs=g.legend.map(l=>({cls:l.cls, v:fmt1(l.v), label:l.txt}));
       const legW=l=>{ mc.font='700 14px '+sans; const vw=mc.measureText(l.v).width; mc.font='14px '+sans; return 17+7+vw+mc.measureText(' '+l.label).width; };
       const iw=W-48; let lx=0, lines=1;                    // wrap legend items within the content width
@@ -1184,7 +994,7 @@
     const {canvas}=await paintEffect(m,3);
     await new Promise(res=>canvas.toBlob(b=>{
       const slug=(est.o||'intervention-facts').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'report';
-      if(b) downloadBlob(slug+'-report.png', b);
+      if(b) dlBlob(slug+'-report.png', b);
       res();
     },'image/png'));
   }
@@ -2606,21 +2416,6 @@
     return { id:'daly', label:'DALY Source', mount };
   }
 
-  // Lightweight "coming soon" tool for slots that aren't built yet. Same section
-  // shape as a real tool so the shell can show/route it; filled in later.
-  function createPlaceholderTool(id,label){
-    const sec=document.createElement('section');
-    sec.className='tool'; sec.dataset.tool=id; sec.style.display='none';
-    sec.innerHTML=goalBoxHTML(id)
-      +'<div class="card">'
-      +'<div class="card__header"><span class="slash"></span><span class="card__title">'+esc(label)+'</span></div>'
-      +'<div class="placeholder"><div class="placeholder-badge">Coming soon</div>'
-      +'<p>The <b>'+esc(label)+'</b> tool isn’t built yet. It will follow the same layout as the others — a visualization, input cells and customization toggles, and an R-code export.</p></div>'
-      +'</div>';
-    document.querySelector('.wrap').appendChild(sec);
-    return { id, label, mount(){} };
-  }
-
   // ================================ Tool: Comparative Scale (DALYs/year ranking) ================================
   // 22 vertical bars sorted ascending by DALYs averted per year: 21 fixed Evidence Action
   // program/geographies plus the user's intervention (name + value), which sorts into its rank,
@@ -2770,25 +2565,6 @@
     const allCrit=()=>state.tiers.reduce((a,t)=>a.concat(t.crit),[]);
     function counts(){ const c={H:0,M:0,L:0,NR:0}; allCrit().forEach(x=>{ if(c[x.r]!=null) c[x.r]++; }); return c; }
 
-    // --- render: heat matrix ---
-    function matrixHTML(){
-      return state.tiers.map(t=>
-        '<div class="sc-tier">'
-        +'<div class="sc-tierlab"><div class="sc-tiernum">'+esc(t.num)+'</div><div class="sc-tiername">'+esc(t.name)+'</div></div>'
-        +'<div class="sc-tiles">'+t.crit.map(cr=>
-            '<div class="sc-tile" style="background:'+RC[cr.r]+'"><div class="sc-tile-name">'+esc(cr.n)+'</div>'
-            +'<div class="sc-tile-code">'+esc(cr.r)+'</div></div>').join('')
-        +'</div></div>').join('');
-    }
-    // --- render: rating-mix rail (band width = count × 8px) ---
-    function railHTML(){
-      const c=counts(), total=allCrit().length||1;
-      return ORDER.map(r=>{
-        const n=c[r], pct=Math.round(n/total*100);
-        return '<div class="sc-railrow"><span class="sc-band" style="background:'+RC[r]+';width:'+(n*8)+'px"></span>'
-          +'<div class="sc-railtext"><div class="sc-count">'+n+'</div><div class="sc-lab">'+RLABEL[r]+' · '+pct+'%</div></div></div>';
-      }).join('');
-    }
     function redraw(){ previewScorecard(); }
 
     // --- editor ---
