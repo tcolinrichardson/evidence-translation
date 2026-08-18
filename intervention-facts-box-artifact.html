@@ -2189,8 +2189,10 @@
     }
 
     function reportCfg(){
+      // Drop params with no computable % change (blank/unparseable base or sw) unless flagged
+      // "never" — otherwise they'd paint a phantom 0% bar at the top, which the R export omits.
       return {kind:'switching', eyebrow:EYEBROW, title:TITLE_HEAD+' '+esc(state.titleTail), cutoff:state.cutoff,
-              params:state.params.map(p=>({label:p.label, pct:pctOf(p), never:!!p.never})), slug:'switching'};
+              params:state.params.filter(p=>p.never||isFinite(pctOf(p))).map(p=>({label:p.label, pct:pctOf(p), never:!!p.never})), slug:'switching'};
     }
     function redraw(){ previewReport(q('preview'), reportCfg()); q('rCodeOut').textContent=rCode(); }
     function renderRows(){
