@@ -1002,11 +1002,8 @@
   // ---- PNG report: everything above "Show / hide", composited on a canvas ----
   // CSP-safe — plain SVG rasterized via a data: URL taints nothing (cf.
   // effect-reporting-tool/js/export.js). Respects the show/hide toggles.
-  function downloadBlob(filename, blob){
-    const url=URL.createObjectURL(blob), a=document.createElement('a');
-    a.href=url; a.download=filename; document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-  }
+  // Effect-tool download path — delegates to the shared, iframe-safe saver (see dlBlob).
+  function downloadBlob(filename, blob){ dlBlob(filename, blob); }
   function reportCols(m){
     const out=[];
     if(m.measure==='md'){
@@ -1289,7 +1286,22 @@
     return x+size;
   }
   const escAttr=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-  const dlBlob=(filename,blob)=>{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);};
+  // Save a blob as a file. At top level (e.g. GitHub Pages) a normal <a download> click saves
+  // directly. Inside a sandboxed/cross-origin iframe that click is silently blocked (no exception,
+  // so a .catch never fires), so we detect the embedded case and open the image in a new tab where
+  // the viewer can save it — falling back to an alert if the popup is blocked too.
+  const dlBlob=(filename,blob)=>{
+    const u=URL.createObjectURL(blob);
+    const revoke=()=>setTimeout(()=>{ try{ URL.revokeObjectURL(u); }catch(_){} }, 10000);
+    let embedded=false; try{ embedded=(window.self!==window.top); }catch(_){ embedded=true; }   // cross-origin access throws => embedded
+    if(!embedded){
+      const a=document.createElement('a'); a.href=u; a.download=filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); revoke(); return;
+    }
+    const w=window.open(u,'_blank');
+    if(!w){ try{ alert('Download was blocked in this embedded view. Open the page on its own tab (or its GitHub Pages URL) to save the image.'); }catch(_){} }
+    revoke();
+  };
   function copyR(txt,done){
     const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done();};
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fb);}else fb();
