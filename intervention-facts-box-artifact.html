@@ -1132,8 +1132,10 @@
         // sub-line(s) (CI / control→treatment). flagSub → magenta bold (discontinuous NNT).
         ctx.textAlign='center';
         col.vals.slice(1).forEach((t,k)=>{
-          if(col.flagSub && k===0){ ctx.fillStyle='#e600a0'; ctx.font='700 12.5px '+sans; }
-          else { ctx.fillStyle=fg3; ctx.font='12.5px '+sans; }
+          const flag=col.flagSub && k===0, pre=flag?'700 ':'';
+          let sfs=12.5; ctx.font=pre+sfs+'px '+sans;
+          while(sfs>8 && ctx.measureText(String(t)).width>w-24){ sfs-=0.5; ctx.font=pre+sfs+'px '+sans; }
+          ctx.fillStyle=flag?'#e600a0':fg3;
           ctx.fillText(t, cx, y+104+k*18);
         });
       });
@@ -1385,8 +1387,10 @@
         const val=String(col.vals[0]), vpx=fitPx(val,'700',30,w-40,13);
         ctx.fillStyle=col.accent?mag:ink; ctx.font='700 '+vpx+'px '+mono;
         ctx.fillText(val,cx,y+78);
-        ctx.fillStyle=fg3; ctx.font='12.5px '+sans;
-        col.vals.slice(1).forEach((t,k)=>ctx.fillText(t,cx,y+104+k*18));
+        ctx.fillStyle=fg3;
+        col.vals.slice(1).forEach((t,k)=>{ let sfs=12.5; ctx.font=sfs+'px '+sans;
+          while(sfs>8 && ctx.measureText(String(t)).width>w-40){ sfs-=0.5; ctx.font=sfs+'px '+sans; }
+          ctx.fillText(t,cx,y+104+k*18); });
       });
       ctx.strokeStyle=border; ctx.beginPath(); ctx.moveTo(0,y+metricsH+0.5); ctx.lineTo(W,y+metricsH+0.5); ctx.stroke();
       y+=metricsH;
@@ -1497,8 +1501,14 @@
     ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='600 10px '+mono;
     ctx.fillText(String(totalLabel||'Total DALYs').toUpperCase(), railX+tPadX, bodyY+totLabelBase);
     ctx.fillStyle='#fff';
-    ctx.font='700 '+numFS+'px '+mono; ctx.fillText(numStr, railX+tPadX, bodyY+numBase);
-    ctx.font='700 '+unitFS+'px '+mono; ctx.fillText(unitStr, railX+tPadX, bodyY+unitBase);
+    // figure + unit each shrink to fit the rail width so a large total never spills off the panel
+    { const availT=railW-2*tPadX;
+      let nfs=numFS; ctx.font='700 '+nfs+'px '+mono;
+      while(nfs>18 && ctx.measureText(numStr).width>availT){ nfs-=1; ctx.font='700 '+nfs+'px '+mono; }
+      ctx.fillText(numStr, railX+tPadX, bodyY+numBase);
+      let ufs=unitFS; ctx.font='700 '+ufs+'px '+mono;
+      while(ufs>16 && ctx.measureText(unitStr).width>availT){ ufs-=1; ctx.font='700 '+ufs+'px '+mono; }
+      ctx.fillText(unitStr, railX+tPadX, bodyY+unitBase); }
 
     // Legend panel — stretched to fill the rail down to the chart bottom
     if(legItems.length){
@@ -1638,7 +1648,7 @@
       for(const c of str){ ctx.fillText(c,cx,y); cx+=ctx.measureText(c).width+sp; } return cx; };
 
     // draw a single tornado data row (label wrap + Low/Base/High cells + bar) on a given scale
-    const drawDataRow=(r, rt, xFn, sX)=>{
+    const drawDataRow=(r, rt, xFn, sX, xMin, xMax)=>{
       const cyR=rt+rowH/2;
       ctx.fillStyle=ink; ctx.font='400 12px '+sans; mc.font='400 12px '+sans; ctx.textAlign='left';
       const words=String(r.p.label).split(' '), maxW=colParam-8; let ln=[], lines=[];
@@ -1646,11 +1656,17 @@
       if(ln.length) lines.push(ln.join(' ')); lines=lines.slice(0,2);
       const lh=14, y0=cyR-(lines.length-1)*lh/2;
       lines.forEach((l,k)=>ctx.fillText(l, tableX, y0+k*lh));
-      ctx.fillStyle=muted; ctx.font='400 11.5px '+mono; ctx.textAlign='center';
-      ctx.fillText(String(r.p.low),  lowX0+colLow/2,   cyR);
-      ctx.fillText(String(r.p.base), baseX0+colBase/2, cyR);
-      ctx.fillText(String(r.p.high), highX0+colHigh/2, cyR);
-      const barY=rt+9.5, barH=15, l0=xFn(r.lo), h0=xFn(r.hi), s2=sX;
+      // Low/Base/High cells shrink-to-fit their fixed column width (long values won't spill).
+      ctx.fillStyle=muted; ctx.textAlign='center';
+      const cell=(v,cxc,cw)=>{ const s=String(v); let fs=11.5; ctx.font='400 '+fs+'px '+mono;
+        while(fs>7 && ctx.measureText(s).width>cw-4){ fs-=0.5; ctx.font='400 '+fs+'px '+mono; }
+        ctx.fillText(s, cxc, cyR); };
+      cell(r.p.low,  lowX0+colLow/2,   colLow);
+      cell(r.p.base, baseX0+colBase/2, colBase);
+      cell(r.p.high, highX0+colHigh/2, colHigh);
+      // clamp bar endpoints to the plot box so an output beyond the axis can't spill into the border/table
+      const clamp=x=>(xMin==null?x:Math.max(xMin,Math.min(xMax,x)));
+      const barY=rt+9.5, barH=15, l0=clamp(xFn(r.lo)), h0=clamp(xFn(r.hi)), s2=clamp(sX);
       const leftColor=r.leftIsLow?blue:mag, rightColor=r.leftIsLow?mag:blue;
       const lend=Math.min(s2,h0); if(lend>l0){ ctx.fillStyle=leftColor; ctx.fillRect(l0,barY,lend-l0,barH); }
       const rstart=Math.max(s2,l0); if(h0>rstart){ ctx.fillStyle=rightColor; ctx.fillRect(rstart,barY,h0-rstart,barH); }
@@ -1687,15 +1703,17 @@
     chip('Low', lowX0+colLow/2, blue);
     chip('Base', baseX0+colBase/2, null);
     chip('High', highX0+colHigh/2, mag);
-    // caption inline with the header row, centered over the plot area
-    ctx.fillStyle=ink; ctx.font='500 11px '+mono; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(String(unit||'')+' · base case = '+BASE, plotX0+plotW/2, bodyTop+headRowH/2);
+    // caption inline with the header row, centered over the plot area (shrinks to fit the plot width)
+    ctx.fillStyle=ink; ctx.textAlign='center'; ctx.textBaseline='middle';
+    { const cap=String(unit||'')+' · base case = '+BASE; let cfs=11; ctx.font='500 '+cfs+'px '+mono;
+      while(cfs>8 && ctx.measureText(cap).width>plotW-8){ cfs-=0.5; ctx.font='500 '+cfs+'px '+mono; }
+      ctx.fillText(cap, plotX0+plotW/2, bodyTop+headRowH/2); }
     ctx.fillStyle=ink; ctx.fillRect(tableX, bodyTop+headRowH-1, tableR-tableX, 2);
 
     // ---- main chart: gridlines (beneath spine + bars), spine, data rows, axis ----
     drawGrid(xOf, niceTicks(0, AX, 7), AX, dataTop-4, mainAxisTop);
     ctx.fillStyle=spineCol; ctx.fillRect(spineX-1, dataTop-4, 2, n*rowH+4);
-    rows.forEach((r,i)=>drawDataRow(r, dataTop+i*rowH, xOf, spineX));
+    rows.forEach((r,i)=>drawDataRow(r, dataTop+i*rowH, xOf, spineX, plotX0, plotR));
     drawAxis(xOf, niceTicks(0, AX, 7), AX, mainAxisTop, plotX0, plotW);
 
     // ---- cumulative section (own auto-fit axis; the plot starts right after the phrase) ----
@@ -1715,7 +1733,8 @@
       // gridlines, spine, bar, axis on the widened plot
       drawGrid(xOf2, cumTicks, CUMAX, cumRowTop-4, cumAxisTop);
       ctx.fillStyle=spineCol; ctx.fillRect(cumSpineX-1, cumRowTop-4, 2, rowH+4);
-      { const barY=cumRowTop+9.5, barH=15, l0=xOf2(cumRow.lo), h0=xOf2(cumRow.hi), s2=cumSpineX;
+      { const cl=x=>Math.max(cumPlotX0,Math.min(plotR,x));
+        const barY=cumRowTop+9.5, barH=15, l0=cl(xOf2(cumRow.lo)), h0=cl(xOf2(cumRow.hi)), s2=cl(cumSpineX);
         const lC=cumRow.leftIsLow?blue:mag, rC=cumRow.leftIsLow?mag:blue;
         const lend=Math.min(s2,h0); if(lend>l0){ ctx.fillStyle=lC; ctx.fillRect(l0,barY,lend-l0,barH); }
         const rstart=Math.max(s2,l0); if(h0>rstart){ ctx.fillStyle=rC; ctx.fillRect(rstart,barY,h0-rstart,barH); } }
@@ -1910,8 +1929,12 @@
     // ---- rows ----
     rows.forEach((r,i)=>{
       const rt=dataTop+i*rowH, cyR=rt+rowH/2;
-      ctx.fillStyle=ink; ctx.font='400 12px '+sans; ctx.textAlign='right'; ctx.textBaseline='middle';
-      ctx.fillText(r.label, bodyPad+colLabel, cyR);
+      ctx.fillStyle=ink; ctx.textAlign='right'; ctx.textBaseline='middle';
+      { let lfs=12; ctx.font='400 '+lfs+'px '+sans;
+        while(lfs>8 && ctx.measureText(r.label).width>colLabel-4){ lfs-=0.5; ctx.font='400 '+lfs+'px '+sans; }
+        let s=r.label;   // even at the floor size, an extreme label is ellipsized so it never spills off-canvas
+        if(ctx.measureText(s).width>colLabel-4){ while(s.length>1 && ctx.measureText(s+'…').width>colLabel-4) s=s.slice(0,-1); s+='…'; }
+        ctx.fillText(s, bodyPad+colLabel, cyR); }
       if(r.never){
         ctx.fillStyle=muted; ctx.font='400 11.5px '+sans; ctx.textAlign='center';
         ctx.fillText('never flips', cx, cyR); return;
