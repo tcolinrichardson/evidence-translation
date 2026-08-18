@@ -58,10 +58,10 @@ a live **"Example Report"** figure beneath the download button — see §5.
 
 There is now **one** HTML file:
 
-- **`intervention-facts-box-artifact.html`** — the whole app in one file, and the
-  one that gets published to the artifact URL. The two brand fonts (JetBrains Mono,
-  Roboto Condensed) are **inlined as base64 `@font-face`**, so it is fully
-  self-contained under the artifact sandbox CSP and renders correctly offline.
+- **`index.html`** — the whole app in one file, served at the GitHub Pages root
+  URL. The two brand fonts (JetBrains Mono, Roboto Condensed) are **inlined as
+  base64 `@font-face`**, so it is fully self-contained under the artifact sandbox
+  CSP and renders correctly offline.
 
 Edit this file directly — JS lives in its single `<script>` block; styles in its
 `<style>` block; body markup below. There is no build step and no second copy to
