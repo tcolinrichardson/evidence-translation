@@ -2142,7 +2142,7 @@
       q('inBase').addEventListener('input',e=>{state.base=+e.target.value||0;redraw();});
       q('inAx').addEventListener('input',e=>{state.ax=+e.target.value||0;redraw();});
       q('inUnit').addEventListener('input',e=>{state.unit=e.target.value;redraw();});
-      q('rows').addEventListener('input',e=>{const t=e.target,i=+t.dataset.idx,k=t.dataset.k; if(i>=0&&k){ state.params[i][k]= (k==='lowOut'||k==='highOut')?(+t.value||0):t.value; redraw(); }});
+      q('rows').addEventListener('input',e=>{const t=e.target,i=+t.dataset.idx,k=t.dataset.k; if(i>=0&&k){ const out=(k==='lowOut'||k==='highOut'); state.params[i][k]= out?(t.value.trim()===''||!isFinite(+t.value)?NaN:+t.value):t.value; redraw(); }});   // blank/non-numeric output -> NaN, dropped by valid() (no phantom 0 bar; figure & R agree)
       q('rows').addEventListener('click',e=>{const rm=e.target.dataset.rm; if(rm!=null){ state.params.splice(+rm,1); renderRows(); redraw(); }});
       q('btnAdd').addEventListener('click',()=>{ state.params.push({label:'New parameter', low:'', base:'', high:'', lowOut:Math.round(state.base*0.7), highOut:Math.round(state.base*1.3)}); renderRows(); redraw(); });
       q('editor').addEventListener('input',e=>{ const t=e.target, k=t.dataset.cum; if(k){ state.cumulative[k]=(k==='lowOut'||k==='highOut')?(t.value.trim()===''?NaN:+t.value):t.value; redraw(); } });
@@ -2340,8 +2340,12 @@
     }
     // People is derived, not entered: first row = the starting pool; each later row = the
     // previous row's people × its note multiplier (e.g. '60%' → ×0.60), rounded to whole people.
-    function pctFrac(note){ const m=parseFloat(note); return isFinite(m)?m/100:0; }
-    function recompute(){ state.steps.forEach((s,i)=>{ s.value = (i===0) ? state.startPool : Math.round(state.steps[i-1].value*pctFrac(s.note)); }); }
+    function pctFrac(note){ const m=parseFloat(note); return isFinite(m)?m/100:NaN; }
+    // Row 0 is always the starting pool (position-based). For later rows an unparseable/blank
+    // note carries the previous value through (×1) instead of collapsing the whole cascade to 0 —
+    // e.g. when the "Starting pool" row is dragged down, or a new step's note isn't filled in yet.
+    function recompute(){ state.steps.forEach((s,i)=>{ if(i===0){ s.value=state.startPool; }
+      else { const f=pctFrac(s.note); s.value=Math.round(state.steps[i-1].value*(isFinite(f)?f:1)); } }); }
     // update the read-only People cells in place (no re-render, so a note/pool input keeps focus)
     function refreshValues(){ const outs=q('rows').querySelectorAll('input[data-vidx]'); state.steps.forEach((s,i)=>{ if(outs[i]) outs[i].value=s.value; }); }
     function mount(){
