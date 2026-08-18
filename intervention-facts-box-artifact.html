@@ -455,6 +455,9 @@
 
   // proportion -> percent string, one decimal, trailing .0 stripped
   const pct=v=>{const r=Math.round(v*1000)/10; return (Number.isInteger(r)?r:r.toFixed(1))+'%';};
+  // adaptive-precision percent for risks/ARR: 1 dp ≥1%, 2 dp ≥0.1%, 3 dp below — so the shown
+  // control − treatment reconciles with the shown ARR even for sub-1% risks (trailing zeros stripped).
+  const pctp=v=>{const p=v*100, ap=Math.abs(p), dp=ap>=1?1:ap>=0.1?2:ap>0?3:0; const s=p.toFixed(dp).replace(/\.?0+$/,''); return (s===''||s==='-'?'0':s)+'%';};
   // trim a plain number to <=2 dp, dropping trailing zeros (MD values/units)
   const fmtNum=v=>{ if(!isFinite(v)) return '—'; const r=Math.round(v*100)/100; return String(r); };
 
@@ -703,12 +706,12 @@
       return s;
     }
     const harm = m.rrr < 0;                                         // rr>1: risk increased
-    const zAbs=pct(Math.abs(m.arr)).replace('%',''), nnt=Math.round(Math.abs(1/m.arr)).toLocaleString();
+    const zAbs=pctp(Math.abs(m.arr)).replace('%',''), nnt=Math.round(Math.abs(1/m.arr)).toLocaleString();
     const plLo = harm ? Math.round(-m.rrrHi*100) : Math.round(m.rrrLo*100);
     const plHi = harm ? Math.round(-m.rrrLo*100) : Math.round(m.rrrHi*100);
     const lead = est.measure==='or'
-      ? `An odds ratio of <b>${est.point.toFixed(2)}</b> at a baseline risk of <b>${pct(m.pSQ)}</b> corresponds to a risk of ${o} of <b>${pct(m.pPR)}</b> (from ${pct(m.pSQ)}), `
-      : `The treatment ${harm?'increased':'reduced'} the risk of ${o} from <b>${pct(m.pSQ)}</b> to <b>${pct(m.pPR)}</b>, `;
+      ? `An odds ratio of <b>${est.point.toFixed(2)}</b> at a baseline risk of <b>${pctp(m.pSQ)}</b> corresponds to a risk of ${o} of <b>${pctp(m.pPR)}</b> (from ${pctp(m.pSQ)}), `
+      : `The treatment ${harm?'increased':'reduced'} the risk of ${o} from <b>${pctp(m.pSQ)}</b> to <b>${pctp(m.pPR)}</b>, `;
     return lead+
       `a${harm?'n':''} ${harm?'increase':'reduction'} of <b>${zAbs} percentage points</b> or a relative ${harm?'increase':'reduction'} of <b>${Math.round(Math.abs(m.rrr)*100)}%</b>. `+
       `The uncertainty associated with this estimate means that effect sizes between <b>${plLo}%</b> and <b>${plHi}%</b> are all plausible. `+
@@ -1022,11 +1025,11 @@
           state.showCI?['95% CI '+Math.round(cLo*100)+' – '+Math.round(cHi*100)+'%']:[])});
     }
     if(state.showARR){
-      let sub = pct(m.pSQ)+' → '+pct(m.pPR);
+      let sub = pctp(m.pSQ)+' → '+pctp(m.pPR);
       if(state.showCI){ const aLo=harm?-m.arrHi:m.arrLo, aHi=harm?-m.arrLo:m.arrHi;
-        sub += ' · 95% CI '+pct(aLo).replace('%','')+' – '+pct(aHi).replace('%','')+'pp'; }
+        sub += ' · 95% CI '+pctp(aLo).replace('%','')+' – '+pctp(aHi).replace('%','')+'pp'; }
       out.push({label: harm?'Absolute increase':'Absolute reduction', accent:false,
-        vals:[pct(Math.abs(m.arr)).replace('%',' pp'), sub]});
+        vals:[pctp(Math.abs(m.arr)).replace('%',' pp'), sub]});
     }
     if(state.showNN){
       const nnt=m.arr!==0?Math.round(Math.abs(1/m.arr)).toLocaleString():'∞';
