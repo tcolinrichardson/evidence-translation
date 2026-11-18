@@ -2741,6 +2741,10 @@
     const trackedC=(ctx,txt,cx,y,sp)=>{ let x=cx-trackedW(ctx,txt,sp)/2; for(const ch of String(txt)){ ctx.fillText(ch,x,y); x+=ctx.measureText(ch).width+sp; } };
     function metaWrap(ctx,txt,maxW){ ctx.font='400 14px '+SANS; const out=[]; let ln='';
       for(const w of String(txt).split(' ')){ const t=ln?ln+' '+w:w; if(ctx.measureText(t).width>maxW && ln){ out.push(ln); ln=w; } else ln=t; } if(ln)out.push(ln); return out.length?out:['']; }
+    // Wrap a node label to the box width (the caller sets ctx.font first). An over-long single word
+    // is kept whole; node labels are short phrases in practice.
+    function wrapNode(ctx,txt,maxW){ const out=[]; let ln='';
+      for(const w of String(txt).split(/\s+/)){ const t=ln?ln+' '+w:w; if(ctx.measureText(t).width>maxW && ln){ out.push(ln); ln=w; } else ln=t; } if(ln)out.push(ln); return out.length?out:['']; }
     function cardGeom(ctx,card){ const lines=metaWrap(ctx,card.meta,CARD_W-2*CARD_PAD);
       const h=HEADER_H+CARD_PAD+11+10+20+10+(18*lines.length-4)+10+6+4+10+CARD_PAD; return {lines,h}; }
     function drawCard(ctx,card,num,x,topY,accent){
@@ -2770,7 +2774,17 @@
       const S=scale;
       if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } try{ await brandIconReady; }catch(e){}
       const measure=document.createElement('canvas').getContext('2d');
-      const N=state.nodes.length, chainH=PITCH*(N-1)+NODE_H;
+      const N=state.nodes.length;
+      // Node layout: wrap each label and grow its box vertically; stack the boxes keeping the
+      // original inter-box gap, so a chain of short (single-line) labels renders exactly as before.
+      const NODE_GAP=PITCH-NODE_H, NLH=16, NPADV=14, NPADX=12;
+      measure.font='400 13px '+MONO;
+      const nodeLay=[]; let _ntop=0;
+      state.nodes.forEach(nd=>{ const lines=wrapNode(measure, nd.label, NODE_W-2*NPADX);
+        const h=Math.max(NODE_H, lines.length*NLH+2*NPADV);
+        nodeLay.push({top:_ntop, h, cy:_ntop+h/2, lines}); _ntop+=h+NODE_GAP; });
+      const chainH=nodeLay[N-1].top+nodeLay[N-1].h;
+      const ycOf=i=>nodeLay[clampIdx(i)].cy;   // real variable-height node centres (shadows the fixed-pitch helper)
       // cards with span + greedy lane assignment
       const cards=state.cards.map((c,idx)=>{ const from=clampIdx(c.from), to=clampIdx(c.to), a=Math.min(from,to), b=Math.max(from,to);
         return {c, idx, from, to, yTop:ycOf(a), yBot:ycOf(b)}; });
@@ -2814,15 +2828,16 @@
       // diagram
       ctx.save(); ctx.translate(originX, originY);
       // nodes
-      state.nodes.forEach((nd,i)=>{ const y=PITCH*i;
-        ctx.strokeStyle=INK; ctx.lineWidth=2; ctx.strokeRect(1, y+1, NODE_W-2, NODE_H-2);
+      state.nodes.forEach((nd,i)=>{ const L=nodeLay[i], y=L.top;
+        ctx.strokeStyle=INK; ctx.lineWidth=2; ctx.strokeRect(1, y+1, NODE_W-2, L.h-2);
         ctx.fillStyle=INK; ctx.font='400 13px '+MONO; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(nd.label, NODE_CX, y+NODE_H/2+1); });
+        const y0=y+L.h/2-(L.lines.length-1)*NLH/2;
+        L.lines.forEach((ln,k)=> ctx.fillText(ln, NODE_CX, y0+k*NLH+1)); });
       ctx.textBaseline='alphabetic';
       // dashed chain arrows
-      for(let i=0;i<N-1;i++){ const topN=PITCH*(i+1);
+      for(let i=0;i<N-1;i++){ const botI=nodeLay[i].top+nodeLay[i].h, topN=nodeLay[i+1].top;
         ctx.strokeStyle=DASH; ctx.lineWidth=2; ctx.setLineDash([2,4]);
-        ctx.beginPath(); ctx.moveTo(NODE_CX, PITCH*i+NODE_H+8); ctx.lineTo(NODE_CX, topN-18); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(NODE_CX, botI+8); ctx.lineTo(NODE_CX, topN-18); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle=DASH; ctx.beginPath(); ctx.moveTo(NODE_CX-6, topN-18); ctx.lineTo(NODE_CX+6, topN-18); ctx.lineTo(NODE_CX, topN-9); ctx.closePath(); ctx.fill(); }
       // evidence spans + cards
       cards.forEach(cd=>{ const col=accentOf(cd.c.confidence), railX=RAIL_X0+cd.lane*RAIL_GAP, yF=cd.originY, yT=cd.termY;
