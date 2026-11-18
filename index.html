@@ -2720,6 +2720,7 @@
     const SK=Math.tan(-18*Math.PI/180);
     const state={
       intervention:'Net Distribution',
+      layout:'vertical',                       // 'vertical' (default) | 'horizontal'
       nodes:[ {label:'Nets given'}, {label:'Nets used'}, {label:'Bites fall'}, {label:'DALYs averted'} ],
       cards:[
         { from:0, to:2, source:'Johnson et al. 2018', estimate:'−18%', meta:'CI −26 to −9 · Cluster RCT', confidence:3 },
@@ -2770,11 +2771,30 @@
       ctx.textAlign='left';
     }
 
+    // Shared title band + wordmark (both layouts draw this, then their own diagram below it).
+    const TITLE_H=60, CHROME_GAP=24;
+    function drawChrome(ctx, W){
+      const tby=TITLE_H/2+6;
+      ctx.fillStyle=INK; ctx.fillRect(0,0,W,TITLE_H);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+      ctx.fillStyle='#fff'; ctx.font='400 17px '+MONO;
+      let tx=PANEL_PAD; ctx.fillText('Evidence Chain: ',tx,tby); tx+=ctx.measureText('Evidence Chain: ').width;
+      ctx.font='700 17px '+MONO; ctx.fillText(state.intervention,tx,tby);
+      // wordmark (right): "evidence action /", action bold, magenta skewed slash
+      ctx.font='400 12px '+MONO; const ew=ctx.measureText('evidence ').width, sp=ctx.measureText(' ').width, sl=ctx.measureText('/').width;
+      ctx.font='700 12px '+MONO; const aw=ctx.measureText('action').width;
+      let wx=W-PANEL_PAD-(ew+aw+sp+sl);
+      ctx.fillStyle='#fff'; ctx.font='400 12px '+MONO; ctx.fillText('evidence ',wx,tby); wx+=ew;
+      ctx.font='700 12px '+MONO; ctx.fillText('action',wx,tby); wx+=aw+sp;
+      ctx.save(); ctx.translate(wx,tby); ctx.transform(1,0,SK,1,0,0); ctx.fillStyle=MAG; ctx.font='400 12px '+MONO; ctx.fillText('/',0,0); ctx.restore();
+    }
+
     async function paintEvidenceChain(scale){
       const S=scale;
       if(document.fonts&&document.fonts.ready){ try{ await document.fonts.ready; }catch(e){} } try{ await brandIconReady; }catch(e){}
       const measure=document.createElement('canvas').getContext('2d');
       const N=state.nodes.length;
+      if(state.layout==='horizontal') return paintHorizontal(S, measure, N);
       // Node layout: wrap each label and grow its box vertically; stack the boxes keeping the
       // original inter-box gap, so a chain of short (single-line) labels renders exactly as before.
       const NODE_GAP=PITCH-NODE_H, NLH=16, NPADV=14, NPADX=12;
@@ -2807,24 +2827,12 @@
       [...cards].sort((p,r)=>p.desired-r.desired).forEach(cd=>{ cd.cy=Math.max(cd.desired, prevBottom+16+cd.h/2); prevBottom=cd.cy+cd.h/2; });
       const lowestCard=cards.reduce((m,cd)=>Math.max(m,cd.cy+cd.h/2),0);
       const diagramH=Math.max(chainH, lowestCard);
-      const TITLE_H=60, GAP=24, originX=PANEL_PAD, originY=TITLE_H+GAP;
+      const originX=PANEL_PAD, originY=TITLE_H+CHROME_GAP;
       const W=PANEL_PAD+(cardX+CARD_W)+PANEL_PAD, H=originY+diagramH+PANEL_PAD;
       const cv=document.createElement('canvas'); cv.width=Math.round(W*S); cv.height=Math.round(H*S);
       const ctx=cv.getContext('2d'); ctx.scale(S,S);
       ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
-      // title band
-      ctx.fillStyle=INK; ctx.fillRect(0,0,W,TITLE_H);
-      ctx.textAlign='left'; ctx.textBaseline='alphabetic'; const tby=TITLE_H/2+6;
-      ctx.fillStyle='#fff'; ctx.font='400 17px '+MONO;
-      let tx=PANEL_PAD; ctx.fillText('Evidence Chain: ',tx,tby); tx+=ctx.measureText('Evidence Chain: ').width;
-      ctx.font='700 17px '+MONO; ctx.fillText(state.intervention,tx,tby);
-      // wordmark (right): "evidence action /", action bold, magenta skewed slash
-      ctx.font='400 12px '+MONO; const ew=ctx.measureText('evidence ').width, sp=ctx.measureText(' ').width, sl=ctx.measureText('/').width;
-      ctx.font='700 12px '+MONO; const aw=ctx.measureText('action').width;
-      let wx=W-PANEL_PAD-(ew+aw+sp+sl);
-      ctx.fillStyle='#fff'; ctx.font='400 12px '+MONO; ctx.fillText('evidence ',wx,tby); wx+=ew;
-      ctx.font='700 12px '+MONO; ctx.fillText('action',wx,tby); wx+=aw+sp;
-      ctx.save(); ctx.translate(wx,tby); ctx.transform(1,0,SK,1,0,0); ctx.fillStyle=MAG; ctx.font='400 12px '+MONO; ctx.fillText('/',0,0); ctx.restore();
+      drawChrome(ctx, W);
       // diagram
       ctx.save(); ctx.translate(originX, originY);
       // nodes
@@ -2853,6 +2861,77 @@
       ctx.strokeStyle='rgba(32,37,58,0.12)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,W-1,H-1);
       return {canvas:cv,W,H};
     }
+
+    // Horizontal layout: nodes left->right as a fixed-width, even-height row; dashed arrows run
+    // rightward; evidence cards hang in a band BELOW the chain. A 90-degree rotation of the vertical
+    // design — the rail/lane routing, attachment spreading and card de-overlap all swap axes, while
+    // drawCard / cardGeom / wrapNode / accentOf and the greedy lane packing are reused unchanged.
+    function paintHorizontal(S, measure, N){
+      const NODE_W_H=160, NODE_GAP_H=96, NLH=16, NPADV=14, NPADX=12;
+      // nodes: wrap to a fixed width, then take the tallest box's height for an even row
+      measure.font='400 13px '+MONO;
+      const nodeLines=state.nodes.map(nd=>wrapNode(measure, nd.label, NODE_W_H-2*NPADX));
+      const rowH=Math.max(NODE_H, ...nodeLines.map(l=>l.length*NLH+2*NPADV));
+      const nodeLay=state.nodes.map((nd,i)=>({left:i*(NODE_W_H+NODE_GAP_H), lines:nodeLines[i]}));
+      const xcOf=i=>nodeLay[clampIdx(i)].left+NODE_W_H/2;
+      const nodeRowRight=nodeLay[N-1].left+NODE_W_H;
+      // cards: span on the x-axis, greedy lane packing (lanes stack DOWNWARD below the chain)
+      const cards=state.cards.map((c,idx)=>{ const from=clampIdx(c.from), to=clampIdx(c.to), a=Math.min(from,to), b=Math.max(from,to);
+        return {c, idx, from, to, xLo:xcOf(a), xHi:xcOf(b)}; });
+      const forLane=[...cards].sort((p,r)=> p.xLo-r.xLo || p.xHi-r.xHi);
+      const laneEnds=[];
+      forLane.forEach(cd=>{ let lane=0; while(lane<laneEnds.length && laneEnds[lane] > cd.xLo+0.5) lane++; cd.lane=lane; laneEnds[lane]=cd.xHi; });
+      const maxLane=cards.reduce((m,cd)=>Math.max(m,cd.lane||0),0);
+      const RAIL_Y0=rowH+22, cardY=RAIL_Y0+maxLane*RAIL_GAP+STEM_LEN;   // top edge of the card row
+      // attach on node BOTTOM edges; spread shared attachments horizontally (incoming vs outgoing)
+      cards.forEach(cd=>{ cd.originX=xcOf(cd.from); cd.termX=xcOf(cd.to); });
+      const attach=state.nodes.map(()=>[]);
+      cards.forEach(cd=>{ attach[cd.from].push({cd,role:'from'}); attach[cd.to].push({cd,role:'to'}); });
+      attach.forEach((list,ni)=>{ if(list.length<2) return; const c=xcOf(ni), n=list.length;
+        list.sort((p,r)=> (p.role==='to'?0:1)-(r.role==='to'?0:1));
+        list.forEach((it,i)=>{ const x=c+(i-(n-1)/2)*16; if(it.role==='from') it.cd.originX=x; else it.cd.termX=x; }); });
+      // measure card heights + place horizontally (de-overlap), sorted by desired centre x
+      cards.forEach(cd=>{ cd.h=cardGeom(measure,cd.c).h; cd.desired=(cd.originX+cd.termX)/2; });
+      let prevRight=-1e9;
+      [...cards].sort((p,r)=>p.desired-r.desired).forEach(cd=>{ cd.cx=Math.max(cd.desired, prevRight+16+CARD_W/2); prevRight=cd.cx+CARD_W/2; });
+      const minCardLeft=cards.length?Math.min(...cards.map(cd=>cd.cx-CARD_W/2)):0;
+      const maxCardRight=cards.reduce((m,cd)=>Math.max(m,cd.cx+CARD_W/2),0);
+      const maxCardBottom=cards.reduce((m,cd)=>Math.max(m,cardY+cd.h),0);
+      // diagram extent (cards may reach left of the first node, so track a left offset)
+      const diagramLeft=Math.min(0, minCardLeft), diagramRight=Math.max(nodeRowRight, maxCardRight);
+      const diagramH=Math.max(rowH, maxCardBottom);
+      const W=PANEL_PAD+(diagramRight-diagramLeft)+PANEL_PAD, H=(TITLE_H+CHROME_GAP)+diagramH+PANEL_PAD;
+      const cv=document.createElement('canvas'); cv.width=Math.round(W*S); cv.height=Math.round(H*S);
+      const ctx=cv.getContext('2d'); ctx.scale(S,S);
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+      drawChrome(ctx, W);
+      ctx.save(); ctx.translate(PANEL_PAD-diagramLeft, TITLE_H+CHROME_GAP);
+      // nodes (even row)
+      nodeLay.forEach(L=>{ const x=L.left;
+        ctx.strokeStyle=INK; ctx.lineWidth=2; ctx.strokeRect(x+1, 1, NODE_W_H-2, rowH-2);
+        ctx.fillStyle=INK; ctx.font='400 13px '+MONO; ctx.textAlign='center'; ctx.textBaseline='middle';
+        const y0=rowH/2-(L.lines.length-1)*NLH/2;
+        L.lines.forEach((ln,k)=> ctx.fillText(ln, x+NODE_W_H/2, y0+k*NLH+1)); });
+      ctx.textBaseline='alphabetic';
+      // dashed chain arrows (rightward), along the row midline
+      for(let i=0;i<N-1;i++){ const rightI=nodeLay[i].left+NODE_W_H, leftN=nodeLay[i+1].left, my=rowH/2;
+        ctx.strokeStyle=DASH; ctx.lineWidth=2; ctx.setLineDash([2,4]);
+        ctx.beginPath(); ctx.moveTo(rightI+8, my); ctx.lineTo(leftN-18, my); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle=DASH; ctx.beginPath(); ctx.moveTo(leftN-18, my-6); ctx.lineTo(leftN-18, my+6); ctx.lineTo(leftN-9, my); ctx.closePath(); ctx.fill(); }
+      // evidence spans + cards (below the chain)
+      cards.forEach(cd=>{ const col=accentOf(cd.c.confidence), railY=RAIL_Y0+cd.lane*RAIL_GAP, xF=cd.originX, xT=cd.termX, LEGY=rowH;
+        ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(xF, LEGY); ctx.lineTo(xF, railY); ctx.stroke();        // origin leg (down)
+        ctx.beginPath(); ctx.moveTo(xF, railY); ctx.lineTo(xT, railY); ctx.stroke();        // rail (horizontal)
+        ctx.beginPath(); ctx.moveTo(xT, railY); ctx.lineTo(xT, LEGY+9); ctx.stroke();       // return leg (up, short)
+        ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(xT, LEGY); ctx.lineTo(xT-6, LEGY+9); ctx.lineTo(xT+6, LEGY+9); ctx.closePath(); ctx.fill(); // up arrowhead at the to-node
+        const stemX=Math.max(Math.min(cd.cx, Math.max(xF,xT)-2), Math.min(xF,xT)+2);
+        ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(stemX, railY); ctx.lineTo(stemX, cardY); ctx.stroke(); // card stem (down)
+        drawCard(ctx, cd.c, cd.idx+1, cd.cx-CARD_W/2, cardY, col); });
+      ctx.restore();
+      ctx.strokeStyle='rgba(32,37,58,0.12)'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,W-1,H-1);
+      return {canvas:cv,W,H};
+    }
     async function downloadEvidenceChain(){ const {canvas}=await paintEvidenceChain(3);
       await new Promise(res=>canvas.toBlob(b=>{ if(b) dlBlob('evidence-chain-report.png',b); res(); },'image/png')); }
     let _ecTimer;
@@ -2876,6 +2955,10 @@
     function renderEditor(){
       q('editor').innerHTML=
         '<h3>Chain</h3>'
+        +'<div class="nsize-row"><div class="mode-toggle" role="radiogroup" aria-label="Chain layout">'
+          +'<button type="button" class="mode-btn'+(state.layout!=='horizontal'?' is-active':'')+'" data-layout="vertical" aria-pressed="'+(state.layout!=='horizontal')+'">Vertical</button>'
+          +'<button type="button" class="mode-btn'+(state.layout==='horizontal'?' is-active':'')+'" data-layout="horizontal" aria-pressed="'+(state.layout==='horizontal')+'">Horizontal</button>'
+        +'</div></div>'
         +'<div class="nsize-row"><div class="nrow"><label>Intervention:</label><input type="text" data-int="1" value="'+escAttr(state.intervention)+'" style="width:240px"></div></div>'
         +'<div style="font-size:12px;color:var(--muted);margin:8px 0 4px">Nodes (top → bottom)</div>'
         +state.nodes.map((n,i)=>'<div class="nrow" style="margin-bottom:6px"><input type="text" data-node="'+i+'" value="'+escAttr(n.label)+'" style="width:210px">'
@@ -2891,6 +2974,7 @@
       if(t.dataset.ci!=null){ const c=state.cards[+t.dataset.ci], k=t.dataset.ck; if(c&&k){
         c[k]=(k==='from'||k==='to'||k==='confidence')?(+t.value||0):t.value; redraw(); } return; } }
     function onClick(e){ const b=e.target.closest('button'); if(!b) return;
+      if(b.dataset.layout){ if(b.dataset.layout!==state.layout){ state.layout=b.dataset.layout; renderEditor(); redraw(); } return; }
       if(b.dataset.rmnode!=null){ if(state.nodes.length>1){ const idx=+b.dataset.rmnode; state.nodes.splice(idx,1);
         state.cards.forEach(c=>{ if(c.from>idx)c.from--; if(c.to>idx)c.to--; c.from=clampIdx(c.from); c.to=clampIdx(c.to); }); renderEditor(); redraw(); } return; }
       if(b.dataset.rmcard!=null){ state.cards.splice(+b.dataset.rmcard,1); renderEditor(); redraw(); return; }
